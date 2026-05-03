@@ -49,10 +49,25 @@ const app = Fastify({
 });
 
 await app.register(helmet, { contentSecurityPolicy: false });
+// Railway injeta automaticamente o dominio publico nessa env. Adicionamos
+// ele a whitelist pra que Swagger UI (que bate no mesmo host) e outras
+// integracoes same-origin funcionem sem config manual.
+const railwayDomain = process.env.RAILWAY_PUBLIC_DOMAIN;
+const allowedOrigins = new Set(env.CORS_ORIGINS);
+if (railwayDomain) allowedOrigins.add(`https://${railwayDomain}`);
+
 await app.register(cors, {
   origin: (origin, cb) => {
+    // Sem origin: same-origin / curl / postman → libera
     if (!origin) return cb(null, true);
-    if (env.CORS_ORIGINS.includes(origin)) return cb(null, true);
+    if (allowedOrigins.has(origin)) return cb(null, true);
+    // Localhost sempre liberado (dev local)
+    try {
+      const url = new URL(origin);
+      if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+        return cb(null, true);
+      }
+    } catch { /* origin malformada */ }
     return cb(new Error("Not allowed by CORS"), false);
   },
   credentials: true,
