@@ -90,10 +90,18 @@ await app.register(auditRoutes);
 const PORT = env.PORT;
 const HOST = env.HOST;
 
+// Boot diagnostico: imprime em stdout direto pra ficar visivel mesmo se
+// o pino nao tiver flushado ainda quando der crash.
+console.log(`[boot] NODE_ENV=${env.NODE_ENV} PORT=${PORT} HOST=${HOST}`);
+console.log(`[boot] DATABASE_URL set? ${!!process.env.DATABASE_URL}`);
+console.log(`[boot] JWT_SECRET length: ${env.JWT_SECRET.length}`);
+console.log(`[boot] CORS_ORIGINS: ${env.CORS_ORIGINS.join(", ")}`);
+
 try {
   await app.listen({ port: PORT, host: HOST });
-  app.log.info(`📚 Swagger UI: http://localhost:${PORT}/docs`);
+  console.log(`[boot] ✅ Server listening at http://${HOST}:${PORT}`);
+  console.log(`[boot] 📚 Swagger UI: http://localhost:${PORT}/docs`);
 } catch (err) {
-  app.log.error(err);
+  console.error("[boot] ❌ FAIL:", err);
   process.exit(1);
 }
