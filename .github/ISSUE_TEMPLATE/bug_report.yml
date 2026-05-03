@@ -1,0 +1,65 @@
+name: 🐛 Bug report
+description: Reportar comportamento inesperado da API
+title: "[bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: O que aconteceu?
+      placeholder: "Chamei POST /auth/login e recebi 500..."
+    validations:
+      required: true
+
+  - type: input
+    id: endpoint
+    attributes:
+      label: Endpoint afetado
+      placeholder: "POST /auth/login"
+
+  - type: textarea
+    id: request
+    attributes:
+      label: Request (body / headers / query)
+      render: json
+
+  - type: textarea
+    id: response
+    attributes:
+      label: Response recebida
+      render: json
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Resposta esperada
+      placeholder: "200 com {token, user}..."
+    validations:
+      required: true
+
+  - type: input
+    id: request-id
+    attributes:
+      label: X-Request-Id
+      description: Pega no response header pra correlacao com logs
+      placeholder: "uuid-xxx-xxx"
+
+  - type: dropdown
+    id: env
+    attributes:
+      label: Ambiente
+      options:
+        - Local (Docker)
+        - Railway production
+        - Outro
+      default: 0
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Checklist
+      options:
+        - label: Verifiquei que não existe issue similar aberta
+          required: true
+        - label: Tentei reproduzir em ambiente local antes
+          required: false

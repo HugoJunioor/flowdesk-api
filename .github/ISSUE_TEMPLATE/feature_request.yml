@@ -1,0 +1,47 @@
+name: 💡 Feature request
+description: Sugerir novo endpoint ou melhoria na API
+title: "[feat]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Qual problema isso resolve?
+      placeholder: "Hoje preciso fazer N chamadas pra montar X..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposta de endpoint / mudança
+      placeholder: |
+        Endpoint: GET /users/by-group/:name
+        Auth: master only
+        Response: array de users do grupo
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
+      placeholder: "Pensei em fazer no front mas..."
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Quão crítico é?
+      options:
+        - Nice to have
+        - Útil
+        - Bloqueia integração
+      default: 1
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Checklist
+      options:
+        - label: Verifiquei que não existe sugestão similar
+          required: true
