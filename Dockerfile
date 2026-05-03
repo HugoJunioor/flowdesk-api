@@ -27,7 +27,11 @@ ENV NODE_ENV=production
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/prisma ./prisma
+COPY --from=build /app/scripts ./scripts
 COPY --from=build /app/package.json ./
 
+# Garante que o wrapper seja executavel
+RUN chmod +x scripts/start.sh
+
 EXPOSE 3001
-CMD ["node", "dist/server.js"]
+CMD ["sh", "scripts/start.sh"]
