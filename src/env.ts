@@ -19,12 +19,22 @@ const envSchema = z.object({
   RATE_LIMIT_WINDOW: z.coerce.number().int().positive().default(60_000),
 });
 
+console.log("[env] parsing process.env...");
 const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
-  console.error("❌ Variaveis de ambiente invalidas:");
-  console.error(parsed.error.flatten().fieldErrors);
+  console.error("[env] ❌ Variaveis de ambiente invalidas:");
+  console.error(JSON.stringify(parsed.error.flatten().fieldErrors, null, 2));
+  console.error("[env] Vars presentes:", {
+    DATABASE_URL: !!process.env.DATABASE_URL,
+    JWT_SECRET_len: process.env.JWT_SECRET?.length ?? 0,
+    NODE_ENV: process.env.NODE_ENV,
+    PORT: process.env.PORT,
+    HOST: process.env.HOST,
+    CORS_ORIGINS: process.env.CORS_ORIGINS,
+  });
   process.exit(1);
 }
 
+console.log("[env] ✅ vars OK");
 export const env = parsed.data;

@@ -4,6 +4,19 @@
  * Stack: Fastify 4 + Prisma 5 + PostgreSQL 16 + JWT (cookie HttpOnly).
  * Doc interativa em /docs (Swagger UI) e contrato OpenAPI em /docs/json.
  */
+// Top-level handlers pra capturar QUALQUER erro nao tratado no boot.
+// Sem isso, top-level await rejection some sem trace.
+process.on("uncaughtException", (err) => {
+  console.error("[fatal] uncaughtException:", err);
+  process.exit(1);
+});
+process.on("unhandledRejection", (err) => {
+  console.error("[fatal] unhandledRejection:", err);
+  process.exit(1);
+});
+
+console.log("[boot] node iniciado, importando modulos...");
+
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
@@ -12,6 +25,8 @@ import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 
 import { env } from "./env.js";
+
+console.log("[boot] modulos carregados, criando app Fastify...");
 import authPlugin from "./plugins/auth.js";
 import requireMasterPlugin from "./plugins/require-master.js";
 import { healthRoutes } from "./routes/health.js";
@@ -74,8 +89,10 @@ await app.register(swagger, {
 });
 await app.register(swaggerUi, { routePrefix: "/docs" });
 
+console.log("[boot] registrando plugins de auth...");
 await app.register(authPlugin);
 await app.register(requireMasterPlugin);
+console.log("[boot] auth ok, registrando rotas...");
 
 // Rotas
 await app.register(healthRoutes);
@@ -86,6 +103,7 @@ await app.register(demandRoutes);
 await app.register(supportMemberRoutes);
 await app.register(autoAssignRoutes);
 await app.register(auditRoutes);
+console.log("[boot] rotas registradas");
 
 const PORT = env.PORT;
 const HOST = env.HOST;
