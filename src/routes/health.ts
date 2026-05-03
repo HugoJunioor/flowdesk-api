@@ -2,6 +2,11 @@ import type { FastifyInstance } from "fastify";
 import { prisma } from "../db/client.js";
 
 export async function healthRoutes(app: FastifyInstance) {
+  // Raiz: redireciona pro Swagger pra quem abre a URL no navegador
+  app.get("/", { schema: { hide: true } }, async (_req, reply) => {
+    return reply.redirect("/docs");
+  });
+
   app.get("/health", {
     schema: {
       tags: ["meta"],

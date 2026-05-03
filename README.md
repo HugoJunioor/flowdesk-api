@@ -1,6 +1,7 @@
 # FlowDesk API
 
 [![CI](https://github.com/HugoJunioor/flowdesk-api/actions/workflows/ci.yml/badge.svg)](https://github.com/HugoJunioor/flowdesk-api/actions/workflows/ci.yml)
+[![API live](https://img.shields.io/badge/API-online-success?style=flat&logo=railway)](https://flowdesk-api-production-21cf.up.railway.app/docs)
 [![Security](https://img.shields.io/badge/vulnerabilities-0-brightgreen?style=flat)](#-decisões-de-segurança)
 [![Stack](https://img.shields.io/badge/stack-Node%2020%20%2B%20Fastify%20%2B%20Prisma%20%2B%20PostgreSQL-informational?style=flat)](#stack)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat)](LICENSE)
@@ -9,6 +10,12 @@ Backend REST do [**FlowDesk**](https://github.com/HugoJunioor/FlowDesk) — sist
 de gestão de demandas Slack com SLA em horas úteis, classificação automática
 e relatórios BI. Esta API substitui o estado em arquivo (`shared-state.json`)
 do front por persistência real em PostgreSQL.
+
+## 🌐 API ao vivo
+
+🔗 **[flowdesk-api-production-21cf.up.railway.app/docs](https://flowdesk-api-production-21cf.up.railway.app/docs)** — Swagger UI interativo
+
+Hospedado na Railway com PostgreSQL gerenciado, deploy contínuo via GitHub.
 
 ## ✨ Destaques
 
