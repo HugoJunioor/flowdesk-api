@@ -13,8 +13,15 @@ import swaggerUi from "@fastify/swagger-ui";
 
 import { env } from "./env.js";
 import authPlugin from "./plugins/auth.js";
+import requireMasterPlugin from "./plugins/require-master.js";
 import { healthRoutes } from "./routes/health.js";
 import { authRoutes } from "./routes/auth.js";
+import { userRoutes } from "./routes/users.js";
+import { groupRoutes } from "./routes/groups.js";
+import { demandRoutes } from "./routes/demands.js";
+import { supportMemberRoutes } from "./routes/support-members.js";
+import { autoAssignRoutes } from "./routes/auto-assign-rules.js";
+import { auditRoutes } from "./routes/audit.js";
 
 const app = Fastify({
   logger: {
@@ -51,16 +58,34 @@ await app.register(swagger, {
     tags: [
       { name: "meta", description: "Saude e metadados" },
       { name: "auth", description: "Autenticacao" },
+      { name: "users", description: "Usuarios" },
+      { name: "groups", description: "Grupos e permissoes" },
+      { name: "demands", description: "Overrides de demandas" },
+      { name: "support", description: "Membros por nivel" },
+      { name: "auto-assign", description: "Regras de auto-atribuicao" },
+      { name: "audit", description: "Audit log" },
     ],
+    components: {
+      securitySchemes: {
+        cookieAuth: { type: "apiKey", in: "cookie", name: "fd_session" },
+      },
+    },
   },
 });
 await app.register(swaggerUi, { routePrefix: "/docs" });
 
 await app.register(authPlugin);
+await app.register(requireMasterPlugin);
 
 // Rotas
 await app.register(healthRoutes);
 await app.register(authRoutes);
+await app.register(userRoutes);
+await app.register(groupRoutes);
+await app.register(demandRoutes);
+await app.register(supportMemberRoutes);
+await app.register(autoAssignRoutes);
+await app.register(auditRoutes);
 
 const PORT = env.PORT;
 const HOST = env.HOST;

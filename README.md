@@ -70,18 +70,39 @@ API roda em `http://localhost:3001`. Docs interativas em `http://localhost:3001/
 
 **Login inicial:** `master` / `Admin@1` (forçado a trocar no primeiro login)
 
-## 📚 Endpoints (em construção)
+## 📚 Endpoints
 
 | Método | Rota | Auth | Descrição |
 |---|---|---|---|
-| GET  | `/health`        | ❌ | Status + ping no DB |
-| POST | `/auth/login`    | ❌ | Login (cookie HttpOnly) |
-| POST | `/auth/logout`   | ❌ | Limpa cookie |
-| GET  | `/auth/me`       | ✅ | Usuário autenticado |
-| GET  | `/users`         | 🚧 | (em construção) |
-| GET  | `/groups`        | 🚧 | (em construção) |
-| GET  | `/demands/overrides` | 🚧 | (em construção) |
-| GET  | `/audit-log`     | 🚧 | (em construção) |
+| GET     | `/health` | ❌ | Status + ping no DB |
+| POST    | `/auth/login` | ❌ | Login (cookie HttpOnly) |
+| POST    | `/auth/logout` | ❌ | Limpa cookie |
+| GET     | `/auth/me` | 🔐 | Usuário autenticado |
+| GET     | `/users` | 👑 | Listar usuários |
+| GET     | `/users/:id` | 👑 | Detalhe |
+| POST    | `/users` | 👑 | Criar (gera senha temp se omitida) |
+| PATCH   | `/users/:id` | 👑 | Atualizar |
+| DELETE  | `/users/:id` | 👑 | Remover (master protegido) |
+| POST    | `/users/:id/reset-password` | 👑 | Gerar senha temporária |
+| GET     | `/groups` | 🔐 | Listar grupos |
+| GET     | `/groups/:name` | 🔐 | Detalhe + membros |
+| POST    | `/groups` | 👑 | Criar grupo |
+| PATCH   | `/groups/:name` | 👑 | Atualizar permissões |
+| DELETE  | `/groups/:name` | 👑 | Remover |
+| GET     | `/demands/overrides?channel=slack\|sql` | 🔐 | Listar overrides |
+| GET     | `/demands/overrides/:channel/:id` | 🔐 | Override específico |
+| PUT     | `/demands/overrides/:channel/:id` | 🔐 | Criar/atualizar |
+| DELETE  | `/demands/overrides/:channel/:id` | 👑 | Remover |
+| GET     | `/support-members` | 🔐 | Listar mapeamento N1/N2/N3 |
+| PUT     | `/support-members/:login` | 👑 | Definir nível |
+| DELETE  | `/support-members/:login` | 👑 | Remover |
+| GET     | `/auto-assign-rules` | 🔐 | Listar regras ativas |
+| POST    | `/auto-assign-rules` | 👑 | Criar regra |
+| PATCH   | `/auto-assign-rules/:id` | 👑 | Atualizar |
+| DELETE  | `/auto-assign-rules/:id` | 👑 | Remover |
+| GET     | `/audit-log?cursor=&limit=&action=` | 👑 | Log paginado por cursor |
+
+🔐 = autenticado · 👑 = master only
 
 Contrato OpenAPI completo em `/docs/json` ou navegável em `/docs` (Swagger UI).
 
@@ -146,13 +167,16 @@ DATABASE_URL=...  JWT_SECRET=...  npm run db:deploy && npm start
 - [x] Health check com ping no DB
 - [x] Swagger UI auto-gerado
 - [x] Rate limit + helmet + CORS
-- [ ] CRUD `/users` + `/groups`
-- [ ] CRUD `/demands/overrides` (slack + sql)
-- [ ] CRUD `/auto-assign-rules`
-- [ ] CRUD `/support-members`
-- [ ] `/audit-log` paginado
+- [x] CRUD `/users` + reset de senha
+- [x] CRUD `/groups` com matriz de permissões
+- [x] CRUD `/demands/overrides` (slack + sql)
+- [x] CRUD `/auto-assign-rules`
+- [x] CRUD `/support-members`
+- [x] `/audit-log` paginado por cursor
+- [x] Importer `scripts/import-shared-state.ts` (migra estado do front)
+- [x] Configs prontas pra Railway/Fly
 - [ ] Webhook Slack (substituir o sync via cron)
-- [ ] Migration helper: importar `data/shared-state.json` do front
+- [ ] Cliente API no front do FlowDesk
 
 ## 🤝 Projeto principal
 
