@@ -33,5 +33,5 @@ COPY --from=build /app/package.json ./
 # Garante que o wrapper seja executavel
 RUN chmod +x scripts/start.sh
 
-EXPOSE 3001
+EXPOSE 8080
 CMD ["sh", "scripts/start.sh"]
