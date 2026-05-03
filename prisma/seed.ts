@@ -1,9 +1,22 @@
 /**
  * Seed inicial: cria o usuario master + grupos default.
  * Senha do master: "Admin@1" (forca troca no primeiro login via isFirstAccess).
+ *
+ * Self-contained: nao importa de src/ pra que rode tanto em dev (tsx) quanto
+ * em producao (apos build, sem o src/ na imagem Docker).
  */
 import { PrismaClient } from "@prisma/client";
-import { hashPassword } from "../src/lib/crypto.js";
+import { pbkdf2 as pbkdf2Cb, randomBytes } from "node:crypto";
+import { promisify } from "node:util";
+
+const pbkdf2Async = promisify(pbkdf2Cb);
+
+async function hashPassword(password: string): Promise<string> {
+  const iters = 150_000;
+  const salt = randomBytes(16);
+  const hash = await pbkdf2Async(password, salt, iters, 32, "sha256");
+  return `pbkdf2$${iters}$${salt.toString("hex")}$${hash.toString("hex")}`;
+}
 
 const prisma = new PrismaClient();
 
