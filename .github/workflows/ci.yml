@@ -41,6 +41,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Security audit (bloqueia em moderate+)
+        run: npm audit --audit-level=moderate
+
       - name: Generate Prisma client
         run: npx prisma generate
 

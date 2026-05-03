@@ -49,8 +49,8 @@ export async function demandRoutes(app: FastifyInstance) {
 
     const result = await prisma.demandOverride.upsert({
       where: { channel_demandId: { channel, demandId } },
-      create: { channel, demandId, override, updatedBy: req.user.sub },
-      update: { override, updatedBy: req.user.sub },
+      create: { channel, demandId, override: override as never, updatedBy: req.user.sub },
+      update: { override: override as never, updatedBy: req.user.sub },
     });
 
     await audit(req, {

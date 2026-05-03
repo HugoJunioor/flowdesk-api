@@ -1,6 +1,7 @@
 # FlowDesk API
 
 [![CI](https://github.com/HugoJunioor/flowdesk-api/actions/workflows/ci.yml/badge.svg)](https://github.com/HugoJunioor/flowdesk-api/actions/workflows/ci.yml)
+[![Security](https://img.shields.io/badge/vulnerabilities-0-brightgreen?style=flat)](#-decisões-de-segurança)
 [![Stack](https://img.shields.io/badge/stack-Node%2020%20%2B%20Fastify%20%2B%20Prisma%20%2B%20PostgreSQL-informational?style=flat)](#stack)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat)](LICENSE)
 

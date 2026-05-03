@@ -29,7 +29,9 @@ export async function autoAssignRoutes(app: FastifyInstance) {
     schema: { tags: ["auto-assign"], summary: "Criar regra" },
   }, async (req, reply) => {
     const body = ruleBody.parse(req.body);
-    const created = await prisma.autoAssignRule.create({ data: body });
+    const created = await prisma.autoAssignRule.create({
+      data: { rule: body.rule as never, enabled: body.enabled, priority: body.priority },
+    });
     await audit(req, { action: "auto_assign.create", targetId: created.id, payload: body });
     return reply.status(201).send(created);
   });
@@ -40,7 +42,14 @@ export async function autoAssignRoutes(app: FastifyInstance) {
   }, async (req, reply) => {
     const { id } = z.object({ id: z.string().uuid() }).parse(req.params);
     const body = ruleBody.partial().parse(req.body);
-    const updated = await prisma.autoAssignRule.update({ where: { id }, data: body });
+    const updated = await prisma.autoAssignRule.update({
+      where: { id },
+      data: {
+        ...(body.rule !== undefined ? { rule: body.rule as never } : {}),
+        ...(body.enabled !== undefined ? { enabled: body.enabled } : {}),
+        ...(body.priority !== undefined ? { priority: body.priority } : {}),
+      },
+    });
     await audit(req, { action: "auto_assign.update", targetId: id, payload: body });
     return reply.send(updated);
   });
