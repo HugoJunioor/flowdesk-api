@@ -69,7 +69,8 @@ await app.register(swagger, {
       description: "Backend REST do FlowDesk — gestao de demandas Slack com SLA, IA e relatorios.",
       version: "0.1.0",
     },
-    servers: [{ url: `http://localhost:${env.PORT}` }],
+    // Sem hardcode de URL: Swagger UI usa o host de onde o /docs foi servido,
+    // então funciona em localhost, Railway, qualquer dominio.
     tags: [
       { name: "meta", description: "Saude e metadados" },
       { name: "auth", description: "Autenticacao" },
