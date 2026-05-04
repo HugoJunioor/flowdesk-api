@@ -1,7 +1,7 @@
 # Multi-stage build pra reduzir imagem final.
 # Base: Alpine + Node 20. openssl necessario pelo Prisma.
 
-FROM node:20-alpine AS base
+FROM node:25-alpine AS base
 WORKDIR /app
 RUN apk add --no-cache openssl
 
@@ -19,7 +19,7 @@ RUN npx prisma generate
 RUN npm run build
 
 # ---------- runner stage ----------
-FROM node:20-alpine AS runner
+FROM node:25-alpine AS runner
 WORKDIR /app
 RUN apk add --no-cache openssl
 ENV NODE_ENV=production
