@@ -17,6 +17,8 @@ const envSchema = z.object({
     .transform((s) => s.split(",").map((o) => o.trim()).filter(Boolean)),
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
   RATE_LIMIT_WINDOW: z.coerce.number().int().positive().default(60_000),
+  // Slack bot token (opcional). Sem ele, /slack/* responde 503.
+  SLACK_BOT_TOKEN: z.string().startsWith("xoxb-").optional(),
 });
 
 console.log("[env] parsing process.env...");

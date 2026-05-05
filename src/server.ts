@@ -37,6 +37,7 @@ import { demandRoutes } from "./routes/demands.js";
 import { supportMemberRoutes } from "./routes/support-members.js";
 import { autoAssignRoutes } from "./routes/auto-assign-rules.js";
 import { auditRoutes } from "./routes/audit.js";
+import { slackRoutes } from "./routes/slack.js";
 
 const app = Fastify({
   logger: {
@@ -95,6 +96,7 @@ await app.register(swagger, {
       { name: "support", description: "Membros por nivel" },
       { name: "auto-assign", description: "Regras de auto-atribuicao" },
       { name: "audit", description: "Audit log" },
+      { name: "slack", description: "Integracao Slack (postar respostas, status)" },
     ],
     components: {
       securitySchemes: {
@@ -119,6 +121,7 @@ await app.register(demandRoutes);
 await app.register(supportMemberRoutes);
 await app.register(autoAssignRoutes);
 await app.register(auditRoutes);
+await app.register(slackRoutes);
 console.log("[boot] rotas registradas");
 
 const PORT = env.PORT;
