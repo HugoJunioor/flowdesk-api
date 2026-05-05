@@ -110,11 +110,40 @@ Auditado: cada envio gera entrada em audit_log.`,
       thread_ts = body.thread_ts!;
     }
 
+    // Identidade do usuario que esta postando — busca usuario no DB pra
+    // pegar nome real e tentar resolver Slack user_id pelo email (assim
+    // a mensagem sai ja mencionando quem foi via FlowDesk).
+    let displayName = req.user.login;
+    let slackUserId: string | undefined;
+    try {
+      const { prisma } = await import("../db/client.js");
+      const u = await prisma.user.findUnique({
+        where: { id: req.user.sub },
+        select: { name: true, email: true },
+      });
+      if (u?.name) displayName = u.name;
+      // Tenta achar Slack user pelo email (paridade entre sistemas)
+      if (u?.email) {
+        try {
+          const lookup = await slack.users.lookupByEmail({ email: u.email });
+          if (lookup.user?.id) slackUserId = lookup.user.id;
+        } catch { /* email nao bate com nenhum slack user */ }
+      }
+    } catch { /* ignore — usa login como fallback */ }
+
+    // Texto final: prefixa com nome do remetente pra contexto no Slack.
+    // Usa <@SLACK_USER_ID> se conseguiu resolver (vira mention bonita),
+    // senao usa nome do FlowDesk em italico.
+    const senderTag = slackUserId
+      ? `<@${slackUserId}>`
+      : `_${displayName} (via FlowDesk)_`;
+    const finalText = `${senderTag}\n${body.text}`;
+
     try {
       const result = await slack.chat.postMessage({
         channel,
         thread_ts,
-        text: body.text,
+        text: finalText,
       });
 
       if (!result.ok || !result.ts) {
@@ -248,6 +277,113 @@ Campos: \`file\` (binary), \`permalink\` (text) ou \`channel\`+\`thread_ts\` (te
       req.log.error({ err, channel, thread_ts }, "slack files.uploadV2 falhou");
       return reply.status(502 as const).send({
         error: err instanceof Error ? err.message : "Erro no upload",
+      });
+    }
+  });
+
+  // POST /slack/edit — atualiza texto de mensagem postada pelo bot
+  app.post("/slack/edit", {
+    onRequest: [app.authenticate],
+    schema: {
+      tags: ["slack"],
+      summary: "Editar mensagem postada pelo bot",
+      description: `Atualiza o texto de uma mensagem que o bot postou previamente.
+Limitacao Slack: bot so pode editar suas proprias mensagens — nao mexe em mensagens de outros usuarios.
+
+Body: \`{ permalink, replyTimestamp, newText }\`
+- permalink: link da mensagem ORIGINAL da thread (pra extrair channel)
+- replyTimestamp: ISO da reply a editar (convertido pra ts Slack)
+- newText: novo conteudo (max 4000 chars)`,
+      security: [{ cookieAuth: [] }],
+      body: {
+        type: "object",
+        required: ["permalink", "replyTimestamp", "newText"],
+        properties: {
+          permalink: { type: "string", format: "uri" },
+          replyTimestamp: { type: "string" },
+          newText: { type: "string", minLength: 1, maxLength: 4000 },
+        },
+      },
+    },
+  }, async (req, reply) => {
+    if (!slackEnabled) return reply.status(503).send({ error: "Integracao Slack desabilitada" });
+    const body = req.body as { permalink: string; replyTimestamp: string; newText: string };
+
+    const parsed = parseSlackPermalink(body.permalink);
+    if (!parsed) return reply.status(400).send({ error: "Permalink invalido" });
+
+    // Converte ISO -> Slack ts (segundos.milissegundos)
+    const ts = (new Date(body.replyTimestamp).getTime() / 1000).toFixed(6);
+
+    try {
+      const result = await slack.chat.update({
+        channel: parsed.channel,
+        ts,
+        text: body.newText,
+      });
+      if (!result.ok) {
+        throw new SlackError(`Slack rejeitou: ${result.error ?? "unknown"}`, 502);
+      }
+      await audit(req, {
+        action: "slack.message.edited",
+        targetType: "demand",
+        targetId: `slack:${parsed.channel}:${parsed.thread_ts}`,
+        payload: { ts, length: body.newText.length },
+      });
+      return reply.send({ ok: true });
+    } catch (err) {
+      req.log.error({ err }, "slack chat.update falhou");
+      return reply.status(502 as const).send({
+        error: err instanceof Error ? err.message : "Erro ao editar",
+      });
+    }
+  });
+
+  // POST /slack/delete — remove mensagem postada pelo bot
+  app.post("/slack/delete", {
+    onRequest: [app.authenticate],
+    schema: {
+      tags: ["slack"],
+      summary: "Excluir mensagem postada pelo bot",
+      description: "Remove uma mensagem que o bot postou. Bot nao pode excluir mensagens de outros usuarios.",
+      security: [{ cookieAuth: [] }],
+      body: {
+        type: "object",
+        required: ["permalink", "replyTimestamp"],
+        properties: {
+          permalink: { type: "string", format: "uri" },
+          replyTimestamp: { type: "string" },
+        },
+      },
+    },
+  }, async (req, reply) => {
+    if (!slackEnabled) return reply.status(503).send({ error: "Integracao Slack desabilitada" });
+    const body = req.body as { permalink: string; replyTimestamp: string };
+
+    const parsed = parseSlackPermalink(body.permalink);
+    if (!parsed) return reply.status(400).send({ error: "Permalink invalido" });
+
+    const ts = (new Date(body.replyTimestamp).getTime() / 1000).toFixed(6);
+
+    try {
+      const result = await slack.chat.delete({
+        channel: parsed.channel,
+        ts,
+      });
+      if (!result.ok) {
+        throw new SlackError(`Slack rejeitou: ${result.error ?? "unknown"}`, 502);
+      }
+      await audit(req, {
+        action: "slack.message.deleted",
+        targetType: "demand",
+        targetId: `slack:${parsed.channel}:${parsed.thread_ts}`,
+        payload: { ts },
+      });
+      return reply.send({ ok: true });
+    } catch (err) {
+      req.log.error({ err }, "slack chat.delete falhou");
+      return reply.status(502 as const).send({
+        error: err instanceof Error ? err.message : "Erro ao excluir",
       });
     }
   });
