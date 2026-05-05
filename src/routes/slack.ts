@@ -252,6 +252,56 @@ Campos: \`file\` (binary), \`permalink\` (text) ou \`channel\`+\`thread_ts\` (te
     }
   });
 
+  // GET /slack/file/:fileId — proxy de download de arquivo privado Slack.
+  // urlPrivate do Slack so abre com header Authorization Bearer xoxb-... .
+  // Esse endpoint busca os bytes com o token e devolve binario pro browser.
+  app.get("/slack/file/:fileId", {
+    onRequest: [app.authenticate],
+    schema: {
+      tags: ["slack"],
+      summary: "Proxy de download de arquivo privado do Slack",
+      security: [{ cookieAuth: [] }],
+      params: {
+        type: "object",
+        properties: { fileId: { type: "string" } },
+        required: ["fileId"],
+      },
+    },
+  }, async (req, reply) => {
+    if (!slackEnabled) {
+      return reply.status(503).send({ error: "Integracao Slack desabilitada" });
+    }
+    const { fileId } = req.params as { fileId: string };
+
+    try {
+      const info = await slack.files.info({ file: fileId });
+      const file = info.file;
+      if (!file?.url_private || !file.name) {
+        return reply.status(404).send({ error: "Arquivo nao encontrado" });
+      }
+
+      const token = process.env.SLACK_BOT_TOKEN!;
+      const r = await fetch(file.url_private, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!r.ok || !r.body) {
+        throw new Error(`Slack respondeu ${r.status}`);
+      }
+
+      reply.header("Content-Type", file.mimetype || "application/octet-stream");
+      reply.header("Content-Disposition", `inline; filename="${encodeURIComponent(file.name)}"`);
+      if (file.size) reply.header("Content-Length", String(file.size));
+
+      // Stream do body
+      return reply.send(r.body);
+    } catch (err) {
+      req.log.error({ err, fileId }, "slack file proxy falhou");
+      return reply.status(502 as const).send({
+        error: err instanceof Error ? err.message : "Erro ao baixar arquivo",
+      });
+    }
+  });
+
   // Health check do Slack — verifica se token funciona
   app.get("/slack/status", {
     onRequest: [app.authenticate],
